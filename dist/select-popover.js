@@ -194,13 +194,13 @@ var SelectInput = React.createClass({displayName: "SelectInput",
     var searchInput = ReactDOM.findDOMNode(this.refs.searchInput);
     this.props.handleSearch(searchInput.value);
   },
-  
+
   handleBackspace: function(e) {
     if(this.props.searchTerm.length == 0 && (e.keyCode == 8 || e.keyCode == 46)) {
       this.props.unselectValue();
     }
   },
-  
+
   componentDidUpdate: function() {
     var input = ReactDOM.findDOMNode(this.refs.searchInput);
     if(this.props.focus == "in") {
@@ -209,7 +209,7 @@ var SelectInput = React.createClass({displayName: "SelectInput",
       input.blur();
     }
   },
-  
+
   render: function() {
     return (
       React.createElement("input", {type: "text", 
@@ -237,6 +237,7 @@ var HiddenSelectField   = require("./hidden-select-field"),
 var SelectPopover = React.createClass({displayName: "SelectPopover",
   propTypes: {
     options             : React.PropTypes.arrayOf(React.PropTypes.object).isRequired,
+    selectedOptions     : React.PropTypes.arrayOf(React.PropTypes.object),
     name                : React.PropTypes.string,
     selectPlaceholder   : React.PropTypes.string,
     componentClassNames : React.PropTypes.arrayOf(React.PropTypes.string),
@@ -259,7 +260,7 @@ var SelectPopover = React.createClass({displayName: "SelectPopover",
   getInitialState: function() {
     return {
       searchTerm        : "",
-      selectedValues    : [],
+      selectedValues    : this.props.selectedOptions || [],
       focus             : "out"
     }
   },
