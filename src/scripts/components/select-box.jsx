@@ -14,12 +14,12 @@ var SelectBox = onClickOutside(React.createClass({
 
   
   render: function() {
-    var selectedItems = this.props.selectedValues.map(function(item, index) {
-      var label = item.label,
-          value = item.value;
+    var selectedItems = this.props.selectedValues.map(function(value) {
+      var label = this.props.labelsByValue[value],
+          value = value;
 
       return (
-        <SelectBoxItem label={label} value={value} key={index} unselectValue={this.props.unselectValue} />
+        <SelectBoxItem label={label} value={value} key={value} unselectValue={this.props.unselectValue} />
       )
     }, this);
     
