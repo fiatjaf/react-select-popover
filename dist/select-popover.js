@@ -6,16 +6,14 @@ var HiddenSelectField = React.createClass({displayName: "HiddenSelectField",
   render: function() {
     var options = [];
     
-    this.props.options.map(function(option, index) {
+    this.props.options.map(function(option) {
       var label = option.label,
           value = option.value;
 
-        options.push(React.createElement("option", {key: index, value: value}, label));
+        options.push(React.createElement("option", {key: value, value: value}, label));
     });
 
-    var values = this.props.selectedValues.map(function(option) {
-      return option.value;
-    });
+    var values = this.props.selectedValues
 
     return (
       React.createElement("select", {ref: "hiddenSelectBox", defaultValue: values, name: this.props.name, className: "hidden-select-box", multiple: "true"}, 
@@ -64,16 +62,14 @@ var Popover = React.createClass({displayName: "Popover",
     var tags = [];
     var searchTerm = this.props.searchTerm.toString().toLowerCase();
 
-    this.props.options.forEach(function(option, index) {
+    this.props.options.forEach(function(option) {
       var label = option.label,
           value = option.value,
           labelSlug = label.toString().toLowerCase();
 
-      var opt = this.props.isInSelectedValues(option);
+      if(this.props.selectedValues.indexOf(option.value) !== -1 || (searchTerm && labelSlug.indexOf(searchTerm) == -1 ) ) return;
 
-      if(opt && this.props.selectedValues.indexOf(opt) >= 0 || (searchTerm && labelSlug.indexOf(searchTerm) == -1 ) ) return;
-
-      tags.push(React.createElement(PopoverItem, {key: index, label: label, value: value, selectValue: this.props.selectValue}));
+      tags.push(React.createElement(PopoverItem, {key: value, label: label, value: value, selectValue: this.props.selectValue}));
     }, this);
     
     if(!tags.length) {
@@ -128,15 +124,12 @@ module.exports = SelectBoxItem;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],5:[function(require,module,exports){
 (function (global){
-var SelectBoxItem   = require("./select-box-item"),
-    SelectInput     = require("./select-input"),
-    React           = (typeof window !== "undefined" ? window['React'] : typeof global !== "undefined" ? global['React'] : null);
+var SelectBoxItem       = require("./select-box-item"),
+    SelectInput         = require("./select-input"),
+    detectOutsideClicks = require('react-click-outside'),
+    React               = (typeof window !== "undefined" ? window['React'] : typeof global !== "undefined" ? global['React'] : null);
 
-var SelectBox = React.createClass({displayName: "SelectBox",
-  mixins: [
-    (typeof window !== "undefined" ? window['OnClickOutside'] : typeof global !== "undefined" ? global['OnClickOutside'] : null)
-  ],
- 
+var SelectBox = detectOutsideClicks(React.createClass({
   handleClickOutside: function(evt) {
     this.props.focusOut();
   },
@@ -147,12 +140,12 @@ var SelectBox = React.createClass({displayName: "SelectBox",
 
   
   render: function() {
-    var selectedItems = this.props.selectedValues.map(function(item, index) {
-      var label = item.label,
-          value = item.value;
+    var selectedItems = this.props.selectedValues.map(function(value) {
+      var label = this.props.labelsByValue[value],
+          value = value;
 
       return (
-        React.createElement(SelectBoxItem, {label: label, value: value, key: index, unselectValue: this.props.unselectValue})
+        React.createElement(SelectBoxItem, {label: label, value: value, key: value, unselectValue: this.props.unselectValue})
       )
     }, this);
     
@@ -177,13 +170,13 @@ var SelectBox = React.createClass({displayName: "SelectBox",
       )
     )
   }
-});
+}));
 
 
 module.exports = SelectBox;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./select-box-item":4,"./select-input":6}],6:[function(require,module,exports){
+},{"./select-box-item":4,"./select-input":6,"react-click-outside":undefined}],6:[function(require,module,exports){
 (function (global){
 var React = (typeof window !== "undefined" ? window['React'] : typeof global !== "undefined" ? global['React'] : null),
     ReactDOM = (typeof window !== "undefined" ? window['ReactDOM'] : typeof global !== "undefined" ? global['ReactDOM'] : null);
@@ -237,7 +230,14 @@ var HiddenSelectField   = require("./hidden-select-field"),
 var SelectPopover = React.createClass({displayName: "SelectPopover",
   propTypes: {
     options             : React.PropTypes.arrayOf(React.PropTypes.object).isRequired,
-    selectedOptions     : React.PropTypes.arrayOf(React.PropTypes.object),
+    value               : React.PropTypes.oneOfType([
+                            React.PropTypes.string,
+                            React.PropTypes.number,
+                            React.PropTypes.arrayOf(React.PropTypes.oneOfType([
+                              React.PropTypes.string,
+                              React.PropTypes.number
+                            ]))
+                          ]),
     name                : React.PropTypes.string,
     selectPlaceholder   : React.PropTypes.string,
     componentClassNames : React.PropTypes.arrayOf(React.PropTypes.string),
@@ -249,6 +249,7 @@ var SelectPopover = React.createClass({displayName: "SelectPopover",
   getDefaultProps: function() {
     return {
         options             : [],
+        value               : [],
         name                : "react-select-popover",
         selectPlaceholder   : "Choose some options",
         componentClassNames : ["react-select-popover"],
@@ -260,14 +261,26 @@ var SelectPopover = React.createClass({displayName: "SelectPopover",
   getInitialState: function() {
     return {
       searchTerm        : "",
-      selectedValues    : this.props.selectedOptions || [],
+      selectedValues    : this.valueAsArray(this.props.value),
       focus             : "out"
     }
   },
 
+  valueAsArray: function () {
+    return this.props.value
+      ? (Array.isArray(this.props.value) ? this.props.value : [this.props.value])
+      : []
+  },
+
+  willReceiveProps: function (nextProps) {
+    this.setState({
+      selectedValues: this.valueAsArray(nextProps.value)
+    });
+  },
+
   selectValue: function(selectedObj) {  
     var selectedValues = this.state.selectedValues;
-    selectedValues.push(selectedObj);
+    selectedValues.push(selectedObj.value);
     
     this.setState({
       selectedValues: selectedValues,
@@ -285,14 +298,9 @@ var SelectPopover = React.createClass({displayName: "SelectPopover",
   unselectValue: function(objToUnselect) {
     var selectedValues = this.state.selectedValues;
 
-    if(!objToUnselect) {
-      var last = selectedValues[selectedValues.length - 1];
-      objToUnselect = last ? last : null;
-    }
-
-    var selected = this.isInSelectedValues(objToUnselect);
-    if(selected) {
-      var index = selectedValues.indexOf(selected);
+    objToUnselect = objToUnselect || selectedValues[selectedValues.length - 1] || {};
+    var index = selectedValues.indexOf(objToUnselect).value;
+    if (index !== -1) {
       selectedValues.splice(index, 1);
     
       this.setState({
@@ -301,23 +309,12 @@ var SelectPopover = React.createClass({displayName: "SelectPopover",
 
       this.triggerOnChange({
         event: "removed",
-        item: selected,
+        item: objToUnselect,
         value: this.state.selectedValues
       });
-
     }
   },
 
-  isInSelectedValues: function(object) {
-    if(!object) return;
-
-    var result = this.state.selectedValues.filter(function(obj) {
-      return obj.label == object.label && obj.value == object.value;
-    });
-
-    return result ? result[0] : null;
-  },
-  
   handleSearch: function(term) {
     this.setState({
       searchTerm: term
@@ -344,18 +341,22 @@ var SelectPopover = React.createClass({displayName: "SelectPopover",
   },
   
   render: function() {
+    var labelsByValue = {}
+    for (var i = 0; i < this.props.options.length; i++) {
+      labelsByValue[this.props.options[i].value] = this.props.options[i].label;
+    }
+
     return (
       React.createElement("div", {className: "react-select-popover"}, 
         React.createElement(HiddenSelectField, {
             selectedValues: this.state.selectedValues, 
             name: this.props.name, 
-            options: this.props.options, 
-            isInSelectedValues: this.isInSelectedValues}
-
+            options: this.props.options}
         ), 
         
         React.createElement(SelectBox, {
             selectedValues: this.state.selectedValues, 
+            labelsByValue: labelsByValue, 
             unselectValue: this.unselectValue, 
             handleSearch: this.handleSearch, 
             searchTerm: this.state.searchTerm, 
@@ -372,8 +373,7 @@ var SelectPopover = React.createClass({displayName: "SelectPopover",
             selectValue: this.selectValue, 
             searchTerm: this.state.searchTerm, 
             focus: this.state.focus, 
-            popoverClassNames: this.props.popoverClassNames, 
-            isInSelectedValues: this.isInSelectedValues}
+            popoverClassNames: this.props.popoverClassNames}
         )
         
       )

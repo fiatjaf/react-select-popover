@@ -1,12 +1,9 @@
-var SelectBoxItem   = require("./select-box-item"),
-    SelectInput     = require("./select-input"),
-    React           = require("react");
+var SelectBoxItem       = require("./select-box-item"),
+    SelectInput         = require("./select-input"),
+    detectOutsideClicks = require('react-click-outside'),
+    React               = require("react");
 
-var SelectBox = React.createClass({
-  mixins: [
-    require('react-onclickoutside')
-  ],
- 
+var SelectBox = detectOutsideClicks(React.createClass({
   handleClickOutside: function(evt) {
     this.props.focusOut();
   },
@@ -17,12 +14,12 @@ var SelectBox = React.createClass({
 
   
   render: function() {
-    var selectedItems = this.props.selectedValues.map(function(item, index) {
-      var label = item.label,
-          value = item.value;
+    var selectedItems = this.props.selectedValues.map(function(value) {
+      var label = this.props.labelsByValue[value],
+          value = value;
 
       return (
-        <SelectBoxItem label={label} value={value} key={index} unselectValue={this.props.unselectValue} />
+        <SelectBoxItem label={label} value={value} key={value} unselectValue={this.props.unselectValue} />
       )
     }, this);
     
@@ -47,7 +44,7 @@ var SelectBox = React.createClass({
       </div>
     )
   }
-});
+}));
 
 
 module.exports = SelectBox;
