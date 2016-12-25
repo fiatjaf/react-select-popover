@@ -1,12 +1,9 @@
 var SelectBoxItem   = require("./select-box-item"),
     SelectInput     = require("./select-input"),
+    onClickOutside  = require('react-onclickoutside'),
     React           = require("react");
 
-var SelectBox = React.createClass({
-  mixins: [
-    require('react-onclickoutside')
-  ],
- 
+var SelectBox = onClickOutside(React.createClass({
   handleClickOutside: function(evt) {
     this.props.focusOut();
   },
@@ -47,7 +44,7 @@ var SelectBox = React.createClass({
       </div>
     )
   }
-});
+}));
 
 
 module.exports = SelectBox;
