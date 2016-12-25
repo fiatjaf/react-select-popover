@@ -128,15 +128,12 @@ module.exports = SelectBoxItem;
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],5:[function(require,module,exports){
 (function (global){
-var SelectBoxItem   = require("./select-box-item"),
-    SelectInput     = require("./select-input"),
-    React           = (typeof window !== "undefined" ? window['React'] : typeof global !== "undefined" ? global['React'] : null);
+var SelectBoxItem       = require("./select-box-item"),
+    SelectInput         = require("./select-input"),
+    detectOutsideClicks = require('react-click-outside'),
+    React               = (typeof window !== "undefined" ? window['React'] : typeof global !== "undefined" ? global['React'] : null);
 
-var SelectBox = React.createClass({displayName: "SelectBox",
-  mixins: [
-    (typeof window !== "undefined" ? window['OnClickOutside'] : typeof global !== "undefined" ? global['OnClickOutside'] : null)
-  ],
- 
+var SelectBox = detectOutsideClicks(React.createClass({
   handleClickOutside: function(evt) {
     this.props.focusOut();
   },
@@ -177,13 +174,13 @@ var SelectBox = React.createClass({displayName: "SelectBox",
       )
     )
   }
-});
+}));
 
 
 module.exports = SelectBox;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./select-box-item":4,"./select-input":6}],6:[function(require,module,exports){
+},{"./select-box-item":4,"./select-input":6,"react-click-outside":undefined}],6:[function(require,module,exports){
 (function (global){
 var React = (typeof window !== "undefined" ? window['React'] : typeof global !== "undefined" ? global['React'] : null),
     ReactDOM = (typeof window !== "undefined" ? window['ReactDOM'] : typeof global !== "undefined" ? global['ReactDOM'] : null);
@@ -194,13 +191,13 @@ var SelectInput = React.createClass({displayName: "SelectInput",
     var searchInput = ReactDOM.findDOMNode(this.refs.searchInput);
     this.props.handleSearch(searchInput.value);
   },
-  
+
   handleBackspace: function(e) {
     if(this.props.searchTerm.length == 0 && (e.keyCode == 8 || e.keyCode == 46)) {
       this.props.unselectValue();
     }
   },
-  
+
   componentDidUpdate: function() {
     var input = ReactDOM.findDOMNode(this.refs.searchInput);
     if(this.props.focus == "in") {
@@ -209,7 +206,7 @@ var SelectInput = React.createClass({displayName: "SelectInput",
       input.blur();
     }
   },
-  
+
   render: function() {
     return (
       React.createElement("input", {type: "text", 

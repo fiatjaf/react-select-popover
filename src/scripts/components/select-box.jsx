@@ -1,9 +1,9 @@
-var SelectBoxItem   = require("./select-box-item"),
-    SelectInput     = require("./select-input"),
-    onClickOutside  = require('react-onclickoutside'),
-    React           = require("react");
+var SelectBoxItem       = require("./select-box-item"),
+    SelectInput         = require("./select-input"),
+    detectOutsideClicks = require('react-click-outside'),
+    React               = require("react");
 
-var SelectBox = onClickOutside(React.createClass({
+var SelectBox = detectOutsideClicks(React.createClass({
   handleClickOutside: function(evt) {
     this.props.focusOut();
   },
